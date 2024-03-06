@@ -30,14 +30,13 @@ connect_db(app)
 @app.before_request
 def add_user_to_g():
     """If we're logged in, add curr user to Flask global."""
+    g.csrf_form = CSRFForm()
 
     if CURR_USER_KEY in session:
         g.user = User.query.get(session[CURR_USER_KEY])
-        g.csrf_form = CSRFForm()
 
     else:
         g.user = None
-        g.csrf_form = CSRFForm()
 
 
 def do_login(user):
@@ -158,6 +157,7 @@ def list_users():
 @app.get('/users/<int:user_id>')
 def show_user(user_id):
     """Show user profile."""
+    form = g.csrf_form
 
     if not g.user:
         flash("Access unauthorized.", "danger")
@@ -165,19 +165,19 @@ def show_user(user_id):
 
     user = User.query.get_or_404(user_id)
 
-    return render_template('users/show.html', user=user)
+    return render_template('users/show.html', user=user, form=form)
 
 
 @app.get('/users/<int:user_id>/following')
 def show_following(user_id):
     """Show list of people this user is following."""
+    form = g.csrf_form
 
     if not g.user:
         flash("Access unauthorized.", "danger")
         return redirect("/")
-
     user = User.query.get_or_404(user_id)
-    return render_template('users/following.html', user=user)
+    return render_template('users/following.html', user=user, form=form)
 
 
 @app.get('/users/<int:user_id>/followers')
@@ -188,8 +188,9 @@ def show_followers(user_id):
         flash("Access unauthorized.", "danger")
         return redirect("/")
 
+    form = g.csrf_form
     user = User.query.get_or_404(user_id)
-    return render_template('users/followers.html', user=user)
+    return render_template('users/followers.html', user=user, form=form)
 
 
 @app.post('/users/follow/<int:follow_id>')
@@ -198,7 +199,7 @@ def start_following(follow_id):
 
     Redirect to following page for the current for the current user.
     """
-
+    print('$$$$$$$$$$$$$$$$$$$$$ follow id=', follow_id)
     if not g.user:
         flash("Access unauthorized.", "danger")
         return redirect("/")
@@ -207,7 +208,13 @@ def start_following(follow_id):
 
     if form.validate_on_submit():
         followed_user = User.query.get_or_404(follow_id)
-        g.user.following.append(followed_user)
+        # g.user.following.append(followed_user)
+
+        user = User.query.get_or_404(g.user.id)
+        user.following.append(followed_user)
+        followed_user.followers.append(user)
+        print('$$$$$$$$$$$$$$$$$$', user.following)
+        db.session.commit()
         return redirect(f"/users/{g.user.id}/following")
 
 
@@ -327,7 +334,7 @@ def homepage():
     - anon users: no messages
     - logged in: 100 most recent messages of self & followed_users
     """
-    form = CSRFForm()
+    form = g.csrf_form
 
     if g.user:
         messages = (Message
