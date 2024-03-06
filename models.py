@@ -140,6 +140,17 @@ class User(db.Model):
                 return user
 
         return False
+    # Not done
+    @classmethod
+    def updateuser(cls, username, password, email, bio, image_url, background_ )
+        user = User(
+            username=username,
+            email=email,
+            password=hashed_pwd,
+            image_url=image_url,
+        )
+
+
 
     def is_followed_by(self, other_user):
         """Is this user followed by `other_user`?"""
