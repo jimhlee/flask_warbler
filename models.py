@@ -33,6 +33,7 @@ class Follow(db.Model):
         db.Integer,
         db.ForeignKey('users.id', ondelete="cascade"),
         primary_key=True,
+
     )
 
 

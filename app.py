@@ -247,14 +247,10 @@ def profile():
         return redirect("/")
 
     if form.validate_on_submit():
-        try:
-            user = User.authenticate(
-                g.user.username,
-                form.password.data,
-            )
-            # FIXME: handle error below
-        except TypeError:
-            raise(TypeError)
+        user = User.authenticate(
+            g.user.username,
+            form.password.data,
+        )
 
         if user:
             user.username = form.username.data,
@@ -265,9 +261,7 @@ def profile():
             db.session.commit()
             return redirect(f'/users/{user.id}')
 
-    else:
-        flash('AAAAAAAAA')
-        return render_template("/users/edit.html", form=form )
+    return render_template("/users/edit.html", form=form )
     # IMPLEMENT THIS
 
 
@@ -363,9 +357,11 @@ def homepage():
     """
     form = g.csrf_form
 
+
+    following_id = [u.id for u in g.user.following]
     if g.user:
-        messages = (Message
-                    .query
+        messages = (Message.query
+                    .filter(Message.user_id.in_(following_id))
                     .order_by(Message.timestamp.desc())
                     .limit(100)
                     .all())
