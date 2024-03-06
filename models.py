@@ -131,9 +131,10 @@ class User(db.Model):
         If this can't find matching user (or if password is wrong), returns
         False.
         """
+        print('$$$$$$$$$$$$$$$$ username, pw =', username, password)
 
         user = cls.query.filter_by(username=username).one_or_none()
-
+        print('$$$$$$$$$$$$$$$$ user =', user)
         if user:
             is_auth = bcrypt.check_password_hash(user.password, password)
             if is_auth:
@@ -141,14 +142,14 @@ class User(db.Model):
 
         return False
     # Not done
-    @classmethod
-    def updateuser(cls, username, password, email, bio, image_url, background_ )
-        user = User(
-            username=username,
-            email=email,
-            password=hashed_pwd,
-            image_url=image_url,
-        )
+    # @classmethod
+    # def updateuser(cls, username, password, email, bio, image_url, background_ )
+    #     user = User(
+    #         username=username,
+    #         email=email,
+    #         password=hashed_pwd,
+    #         image_url=image_url,
+    #     )
 
 
 

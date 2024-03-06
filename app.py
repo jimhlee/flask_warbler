@@ -6,7 +6,7 @@ from flask_debugtoolbar import DebugToolbarExtension
 from sqlalchemy.exc import IntegrityError
 
 from forms import UserAddForm, LoginForm, MessageForm, CSRFForm, UserUpdateForm
-from models import db, connect_db, User, Message
+from models import db, connect_db, User, Message, DEFAULT_HEADER_IMAGE_URL, DEFAULT_IMAGE_URL
 
 load_dotenv()
 
@@ -240,30 +240,34 @@ def stop_following(follow_id):
 @app.route('/users/profile', methods=["GET", "POST"])
 def profile():
     """Update profile for current user."""
-    form = UpdateUserForm()
+    form = UserUpdateForm(obj=g.user)
+
     if not g.user:
         flash("Access unauthorized.", "danger")
         return redirect("/")
 
     if form.validate_on_submit():
-        user = User.authenticate(
-            form.username.data,
-            form.password.data,
-        )
-        user = User.query.get_or_404(form.username)
+        try:
+            user = User.authenticate(
+                g.user.username,
+                form.password.data,
+            )
+            # FIXME: handle error below
+        except TypeError:
+            raise(TypeError)
+
         if user:
-            user = form.username.data,
-            password = form.password.data,
-            email = form.passwrod.data
+            user.username = form.username.data,
+            user.email = form.email.data
+            user.image_url = form.image_url.data or DEFAULT_IMAGE_URL
+            user.header_image_url = form.header_image_url.data or DEFAULT_HEADER_IMAGE_URL
+            user.bio = form.bio.data
+            db.session.commit()
+            return redirect(f'/users/{user.id}')
 
-    data = {k: v for k, v in form.data.items() if k != "csrf_token"}
-    user = User.register(**data)
-
-
-
-
-
-    return render_template("edit.html", form = form )
+    else:
+        flash('AAAAAAAAA')
+        return render_template("/users/edit.html", form=form )
     # IMPLEMENT THIS
 
 

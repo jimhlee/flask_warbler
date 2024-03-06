@@ -33,12 +33,13 @@ class UserAddForm(FlaskForm):
     )
 
 
-class UserUpdateForm (UserAddForm):
+class UserUpdateForm(UserAddForm):
 
     bio = StringField(
-        "Bio"
+        "(Optional) Bio",
+        validators=[Optional(), Length(max=255)]
     )
-    image_url = StringField(
+    header_image_url = StringField(
         '(Optional) Image URL',
         validators=[Optional(), URL(), Length(max=255)]
     )
