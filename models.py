@@ -91,6 +91,10 @@ class User(db.Model):
 
     messages = db.relationship('Message', backref="user")
 
+    likes = db.relationship(
+        'Message', secondary='likes', backref='users'
+    )
+
     followers = db.relationship(
         "User",
         # secondary refers to the through table
@@ -100,10 +104,6 @@ class User(db.Model):
         primaryjoin=(Follow.user_being_followed_id == id),
         secondaryjoin=(Follow.user_following_id == id),
         backref="following",
-    )
-
-    likes = db.relationship(
-        'Message', secondary='likes', backref='users'
     )
 
     def __repr__(self):
