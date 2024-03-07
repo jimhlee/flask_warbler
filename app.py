@@ -248,6 +248,7 @@ def profile():
             g.user.username,
             form.password.data,
         )
+
         if user:
             user.username = form.username.data,
             user.email = form.email.data
@@ -261,6 +262,7 @@ def profile():
             except IntegrityError:
                 flash('Username already taken')
                 return redirect(f'/users/{user.id}')
+
 
     return render_template("/users/edit.html", form=form)
     # IMPLEMENT THIS
@@ -281,7 +283,7 @@ def delete_user():
     do_logout()
     # delete user's messages first
 
-    messages = (Message.query.filter(Message.user_id == g.user.id).delete())
+    Message.query.filter(Message.user_id == g.user.id).delete()
 
     db.session.delete(g.user)
     db.session.commit()
