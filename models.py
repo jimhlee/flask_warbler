@@ -93,7 +93,10 @@ class User(db.Model):
 
     followers = db.relationship(
         "User",
+        # secondary refers to the through table
         secondary="follows",
+        # only time you'll see the primary and secondary join is when
+        # the relationship is recursive
         primaryjoin=(Follow.user_being_followed_id == id),
         secondaryjoin=(Follow.user_following_id == id),
         backref="following",

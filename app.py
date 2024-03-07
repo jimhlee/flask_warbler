@@ -30,7 +30,6 @@ connect_db(app)
 @app.before_request
 def add_user_to_g():
     """If we're logged in, add curr user to Flask global."""
-    g.csrf_form = CSRFForm()
 
     if CURR_USER_KEY in session:
         g.user = User.query.get(session[CURR_USER_KEY])
@@ -38,6 +37,11 @@ def add_user_to_g():
     else:
         g.user = None
 
+@app.before_request
+def add_csrf_to_g():
+    ''' Add csrf to Flask global. '''
+
+    g.csrf_form = CSRFForm()
 
 def do_login(user):
     """Log in user."""
@@ -116,7 +120,6 @@ def login():
 @app.post('/logout')
 def logout():
     """Handle logout of user and redirect to homepage."""
-
     form = g.csrf_form
 
     if form.validate_on_submit():
@@ -125,7 +128,8 @@ def logout():
         return redirect('/login')
 
     flash("Unauthorized")
-    return render_template('base.html')
+
+    return redirect('base.html')
     # IMPLEMENT THIS AND FIX BUG
     # DO NOT CHANGE METHOD ON ROUTE
 
@@ -188,9 +192,8 @@ def show_followers(user_id):
         flash("Access unauthorized.", "danger")
         return redirect("/")
 
-    form = g.csrf_form
     user = User.query.get_or_404(user_id)
-    return render_template('users/followers.html', user=user, form=form)
+    return render_template('users/followers.html', user=user)
 
 
 @app.post('/users/follow/<int:follow_id>')
@@ -199,23 +202,19 @@ def start_following(follow_id):
 
     Redirect to following page for the current for the current user.
     """
-    print('$$$$$$$$$$$$$$$$$$$$$ follow id=', follow_id)
-    if not g.user:
+
+    # TODO: refactor to combine both conditionals for a fail fast
+    if not g.user or not g.csrf_form.validate_on_submit():
         flash("Access unauthorized.", "danger")
         return redirect("/")
 
-    form = g.csrf_form
+    followed_user = User.query.get_or_404(follow_id)
 
-    if form.validate_on_submit():
-        followed_user = User.query.get_or_404(follow_id)
-        # g.user.following.append(followed_user)
-
-        user = User.query.get_or_404(g.user.id)
-        user.following.append(followed_user)
-        followed_user.followers.append(user)
-        print('$$$$$$$$$$$$$$$$$$', user.following)
-        db.session.commit()
-        return redirect(f"/users/{g.user.id}/following")
+    user = User.query.get_or_404(g.user.id)
+    user.following.append(followed_user)
+    followed_user.followers.append(user)
+    db.session.commit()
+    return redirect(f"/users/{g.user.id}/following")
 
 
 @app.post('/users/stop-following/<int:follow_id>')
@@ -225,16 +224,14 @@ def stop_following(follow_id):
     Redirect to following page for the current for the current user.
     """
 
-    if not g.user:
+    if not g.user or not g.csrf_form.validate_on_submit():
         flash("Access unauthorized.", "danger")
         return redirect("/")
 
-    form = g.csrf_form
-    if form.validate_on_submit():
-        followed_user = User.query.get_or_404(follow_id)
-        g.user.following.remove(followed_user)
-        db.session.commit()
-        return redirect(f"/users/{g.user.id}/following")
+    followed_user = User.query.get_or_404(follow_id)
+    g.user.following.remove(followed_user)
+    db.session.commit()
+    return redirect(f"/users/{g.user.id}/following")
 
 
 @app.route('/users/profile', methods=["GET", "POST"])
@@ -251,17 +248,21 @@ def profile():
             g.user.username,
             form.password.data,
         )
-
         if user:
             user.username = form.username.data,
             user.email = form.email.data
             user.image_url = form.image_url.data or DEFAULT_IMAGE_URL
             user.header_image_url = form.header_image_url.data or DEFAULT_HEADER_IMAGE_URL
             user.bio = form.bio.data
-            db.session.commit()
-            return redirect(f'/users/{user.id}')
 
-    return render_template("/users/edit.html", form=form )
+            try:
+                db.session.commit()
+                return redirect(f'/users/{user.id}')
+            except IntegrityError:
+                flash('Username already taken')
+                return redirect(f'/users/{user.id}')
+
+    return render_template("/users/edit.html", form=form)
     # IMPLEMENT THIS
 
 
@@ -272,19 +273,19 @@ def delete_user():
     Redirect to signup page.
     """
 
-    if not g.user:
+    # combine the form validation and not g.user with an or operator
+    if not g.user or not g.csrf_form.validate_on_submit():
         flash("Access unauthorized.", "danger")
         return redirect("/")
 
-    form = g.csrf_form
-    if form.validate_on_submit():
-        do_logout()
-        db.session.delete(g.user)
-        db.session.commit()
-        return redirect("/signup")
+    do_logout()
+    # delete user's messages first
 
-    flash ("Unauthorized")
-    return redirect("/")
+    messages = (Message.query.filter(Message.user_id == g.user.id).delete())
+
+    db.session.delete(g.user)
+    db.session.commit()
+    return redirect("/signup")
 
 
 ##############################################################################
@@ -355,18 +356,18 @@ def homepage():
     - anon users: no messages
     - logged in: 100 most recent messages of self & followed_users
     """
-    form = g.csrf_form
 
-
-    following_id = [u.id for u in g.user.following]
     if g.user:
+        following_id = [u.id for u in g.user.following]
+        following_id.append(g.user.id)
+
         messages = (Message.query
                     .filter(Message.user_id.in_(following_id))
                     .order_by(Message.timestamp.desc())
                     .limit(100)
                     .all())
 
-        return render_template('home.html', messages=messages, form = form)
+        return render_template('home.html', messages=messages)
 
     else:
         return render_template('home-anon.html')

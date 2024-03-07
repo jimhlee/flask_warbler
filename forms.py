@@ -34,7 +34,7 @@ class UserAddForm(FlaskForm):
 
 
 class UserUpdateForm(UserAddForm):
-
+    '''Form for updating a user'''
     bio = StringField(
         "(Optional) Bio",
         validators=[Optional(), Length(max=255)]
