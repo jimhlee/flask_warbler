@@ -1,12 +1,12 @@
 import os
 from dotenv import load_dotenv
 
-from flask import Flask, render_template, request, flash, redirect, session, g
+from flask import Flask, render_template, request, flash, redirect, session, g, request
 from flask_debugtoolbar import DebugToolbarExtension
 from sqlalchemy.exc import IntegrityError
 
 from forms import UserAddForm, LoginForm, MessageForm, CSRFForm, UserUpdateForm
-from models import db, connect_db, User, Message, DEFAULT_HEADER_IMAGE_URL, DEFAULT_IMAGE_URL
+from models import db, connect_db, User, Message, DEFAULT_HEADER_IMAGE_URL, DEFAULT_IMAGE_URL, Like
 
 load_dotenv()
 
@@ -388,9 +388,19 @@ def add_header(response):
 ##############################################################################
 # Likes
 
-@app.post('/like')
-def like_post(id):
-    pass
+@app.post('/like/<int:message_id>')
+def like_post(message_id):
+    like = Like(user_id = g.user.id, message_id = message_id)
+    db.session.add(like)
+    try:
+        db.session.commit()
+    except IntegrityError:
+        return redirect('/')
+
+
+    return redirect('/')
+
+
 
 
 @app.post('/unlike')
