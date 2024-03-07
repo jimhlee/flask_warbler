@@ -403,6 +403,18 @@ def like_post(message_id):
 
 
 
-@app.post('/unlike')
-def unlike_post(id):
-    pass
+@app.post('/unlike/<int:message_id>')
+def unlike_post(message_id):
+    like = Like.query.get_or_404((g.user.id, message_id))
+    db.session.delete(like)
+    # pop or delete?
+
+    try:
+        db.session.commit()
+
+    except IntegrityError:
+        flash('Error in unlike')
+        return redirect('/')
+
+
+    return redirect('/')
