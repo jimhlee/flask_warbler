@@ -91,6 +91,7 @@ class User(db.Model):
 
     messages = db.relationship('Message', backref="user")
 
+    # be more verbose with variable names here
     likes = db.relationship(
         'Message', secondary='likes', backref='users'
     )

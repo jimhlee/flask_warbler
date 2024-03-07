@@ -392,13 +392,15 @@ def add_header(response):
 def like_post(message_id):
     like = Like(user_id = g.user.id, message_id = message_id)
     db.session.add(like)
+    next_location = request.form['next_location']
+
     try:
         db.session.commit()
     except IntegrityError:
         return redirect('/')
 
 
-    return redirect('/')
+    return redirect(next_location)
 
 
 
@@ -407,14 +409,16 @@ def like_post(message_id):
 def unlike_post(message_id):
     like = Like.query.get_or_404((g.user.id, message_id))
     db.session.delete(like)
-    # pop or delete?
+    # g.user.likes.remove(like)
+    next_location = request.form['next_location']
 
+    # g.user.likes.remove(like)
+    # hidden input with value of request.url in html form
+    # give it a name attr,
     try:
         db.session.commit()
 
     except IntegrityError:
-        flash('Error in unlike')
         return redirect('/')
 
-
-    return redirect('/')
+    return redirect(next_location)
