@@ -102,6 +102,10 @@ class User(db.Model):
         backref="following",
     )
 
+    likes = db.relationship(
+        'Message', secondary='likes', backref='users'
+    )
+
     def __repr__(self):
         return f"<User #{self.id}: {self.username}, {self.email}>"
 
@@ -135,10 +139,7 @@ class User(db.Model):
         If this can't find matching user (or if password is wrong), returns
         False.
         """
-        print('$$$$$$$$$$$$$$$$ username, pw =', username, password)
-
         user = cls.query.filter_by(username=username).one_or_none()
-        print('$$$$$$$$$$$$$$$$ user =', user)
         if user:
             is_auth = bcrypt.check_password_hash(user.password, password)
             if is_auth:
@@ -200,6 +201,23 @@ class Message(db.Model):
         nullable=False,
     )
 
+
+class Like(db.Model):
+    ''' Table for tracking likes '''
+
+    __tablename__ = 'likes'
+
+    user_id = db.Column(
+        db.Integer,
+        db.ForeignKey('users.id'),
+        primary_key=True,
+    )
+
+    message_id = db.Column(
+        db.Integer,
+        db.ForeignKey('messages.id'),
+        primary_key=True,
+    )
 
 def connect_db(app):
     """Connect this database to provided Flask app.

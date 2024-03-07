@@ -157,11 +157,9 @@ def list_users():
 
     return render_template('users/index.html', users=users)
 
-##TODO: Take out the g.csrf_form in all routes
 @app.get('/users/<int:user_id>')
 def show_user(user_id):
     """Show user profile."""
-    form = g.csrf_form
 
     if not g.user:
         flash("Access unauthorized.", "danger")
@@ -169,19 +167,18 @@ def show_user(user_id):
 
     user = User.query.get_or_404(user_id)
 
-    return render_template('users/show.html', user=user, form=form)
+    return render_template('users/show.html', user=user)
 
 
 @app.get('/users/<int:user_id>/following')
 def show_following(user_id):
     """Show list of people this user is following."""
-    form = g.csrf_form
 
     if not g.user:
         flash("Access unauthorized.", "danger")
         return redirect("/")
     user = User.query.get_or_404(user_id)
-    return render_template('users/following.html', user=user, form=form)
+    return render_template('users/following.html', user=user)
 
 
 @app.get('/users/<int:user_id>/followers')
@@ -203,7 +200,6 @@ def start_following(follow_id):
     Redirect to following page for the current for the current user.
     """
 
-    # TODO: refactor to combine both conditionals for a fail fast
     if not g.user or not g.csrf_form.validate_on_submit():
         flash("Access unauthorized.", "danger")
         return redirect("/")
@@ -387,3 +383,16 @@ def add_header(response):
     # https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Cache-Control
     response.cache_control.no_store = True
     return response
+
+
+##############################################################################
+# Likes
+
+@app.post('/like')
+def like_post(id):
+    pass
+
+
+@app.post('/unlike')
+def unlike_post(id):
+    pass
