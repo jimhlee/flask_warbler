@@ -157,7 +157,7 @@ def list_users():
 
     return render_template('users/index.html', users=users)
 
-
+##TODO: Take out the g.csrf_form in all routes
 @app.get('/users/<int:user_id>')
 def show_user(user_id):
     """Show user profile."""
@@ -238,7 +238,7 @@ def stop_following(follow_id):
 def profile():
     """Update profile for current user."""
     form = UserUpdateForm(obj=g.user)
-
+    #TODO:Put if not g.user on the very top of function
     if not g.user:
         flash("Access unauthorized.", "danger")
         return redirect("/")
@@ -248,7 +248,10 @@ def profile():
             g.user.username,
             form.password.data,
         )
-
+        ## Use if else
+        if user == False:
+            flash ("Invalid password")
+            return redirect('/users/profile')
         if user:
             user.username = form.username.data,
             user.email = form.email.data
@@ -262,6 +265,8 @@ def profile():
             except IntegrityError:
                 flash('Username already taken')
                 return redirect(f'/users/{user.id}')
+
+
 
 
     return render_template("/users/edit.html", form=form)
