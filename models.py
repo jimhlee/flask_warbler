@@ -141,6 +141,7 @@ class User(db.Model):
         False.
         """
         user = cls.query.filter_by(username=username).one_or_none()
+
         if user:
             is_auth = bcrypt.check_password_hash(user.password, password)
             if is_auth:

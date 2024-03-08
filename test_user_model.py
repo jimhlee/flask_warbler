@@ -3,14 +3,14 @@
 # Here we're calling it warbler_test which you can see in the os.environ assignment
 # below
 
-# run these tests like(outside of ipython):
+# run these tests(outside of ipython) like:
 #
 #    python -m unittest test_user_model.py
 
 
 import os
 from unittest import TestCase
-
+from sqlalchemy.exc import IntegrityError
 from models import db, User, Message, Follow, Like, DEFAULT_IMAGE_URL
 
 # BEFORE we import our app, let's set an environmental variable
@@ -36,7 +36,7 @@ class UserModelTestCase(TestCase):
     '''Tests user model.'''
 
     def setUp(self):
-        '''Sets up tow users.'''
+        '''Sets up two users.'''
         User.query.delete()
 
         u1 = User.signup("u1", "u1@email.com", "password", None)
@@ -65,33 +65,72 @@ class UserModelTestCase(TestCase):
         u1 = User.query.get(self.u1_id)
         u2 = User.query.get(self.u2_id)
 
-        with app.test_client() as client:
-            u1.following.append(u2)
-        # TODO: why doesn't this need to be committed?
+        u1.following.append(u2)
 
         self.assertEqual(len(u1.following), 1)
         self.assertEqual(len(u2.followers), 1)
-        self.assertIs(u1.following[0], u2)
-        self.assertIs(u2.followers[0], u1)
+        self.assertIs(u1.is_following(u2), True)
+        self.assertIs(u1.is_followed_by(u2), False)
+        self.assertIs(u2.is_followed_by(u1), True)
+        self.assertIs(u2.is_following(u1), False)
 
 
     def test_update_user(self):
         '''Test user update'''
         u1 = User.query.get(self.u1_id)
 
-        with app.test_client() as client:
-            u1.username = 'test_1'
-            u1.email = 'test_1@email.com'
-            u1.image_url = 'test_1.com'
-            u1.bio = 'test_1 bio'
-            u1.location = 'testing, USA'
-            u1.header_image_url = 'test_header_1.com'
+        u1.username = 'test_1'
+        u1.email = 'test_1@email.com'
+        u1.image_url = 'test_1.com'
+        u1.bio = 'test_1 bio'
+        u1.location = 'testing, USA'
+        u1.header_image_url = 'test_header_1.com'
 
-            self.assertIs(u1.username, 'test_1')
-            self.assertIs(u1.email, 'test_1@email.com')
-            self.assertIs(u1.image_url, 'test_1.com')
-            self.assertIs(u1.bio, 'test_1 bio')
-            self.assertIs(u1.location, 'testing, USA')
-            self.assertIs(u1.header_image_url, 'test_header_1.com')
+        self.assertIs(u1.username, 'test_1')
+        self.assertIs(u1.email, 'test_1@email.com')
+        self.assertIs(u1.image_url, 'test_1.com')
+        self.assertIs(u1.bio, 'test_1 bio')
+        self.assertIs(u1.location, 'testing, USA')
+        self.assertIs(u1.header_image_url, 'test_header_1.com')
 
+
+    def test_authenticate_user_success(self):
+        '''Test user authentication success'''
+        u1 = User.query.get(self.u1_id)
+
+        self.assertIs(User.authenticate(u1.username, 'password'), u1)
+
+
+    def test_authenticate_user_failure_password(self):
+        '''Test user authentication failure'''
+        u1 = User.query.get(self.u1_id)
+
+        self.assertFalse(User.authenticate(u1.username, 'test_password'))
+
+
+    def test_authenticate_user_failure_username(self):
+        '''Test user authentication failure'''
+        u1 = User.query.get(self.u1_id)
+
+        self.assertFalse(User.authenticate('test_username', 'password'))
+
+
+    def test_signup_user_success(self):
+        '''Test user authentication'''
+        u3 = User.signup("u3", "u3@email.com", "password", None)
+        db.session.commit()
+
+        self.assertIsInstance(u3, User)
+        self.assertIs(User.query.get(u3.id), u3)
+
+
+    def test_signup_user_failure_invalid_password(self):
+        with self.assertRaises(ValueError):
+            User.signup("u4", "u3@email.com", '', None)
+
+
+    def test_signup_failre_invalid_username(self):
+        with self.assertRaises(IntegrityError):
+            User.signup(None, "u4@email.com", "password", None)
+            db.session.commit()
 
