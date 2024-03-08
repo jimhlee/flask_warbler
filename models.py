@@ -91,23 +91,9 @@ class User(db.Model):
 
     messages = db.relationship('Message', backref="user")
 
-# TODO: names the properties "liked_messages"
     liked_messages = db.relationship(
         'Message', secondary='likes', backref='users'
     )
-
-
-    # likes = db.relationship(
-    #     "User",
-    #     # secondary refers to the through table
-    #     secondary="follows",
-    #     # only time you'll see the primary and secondary join is when
-    #     # the relationship is recursive
-    #     primaryjoin=(Follow.user_being_followed_id == id),
-    #     secondaryjoin=(Follow.user_following_id == id),
-    #     backref="following",
-    # )
-
 
 
     followers = db.relationship(
