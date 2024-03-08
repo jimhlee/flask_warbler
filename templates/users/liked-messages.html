@@ -4,7 +4,7 @@
 
 <div class="col-lg-6 col-md-8 col-sm-12">
   <ul class="list-group" id="messages">
-    {% for msg in user.likes %}
+    {% for msg in user.liked_messages %}
     <li class="list-group-item">
       <a href="/messages/{{ msg.id }}" class="message-link">
         <a href="/users/{{ msg.user.id }}">
@@ -13,7 +13,7 @@
         <div class="message-area">
           <a href="/users/{{ msg.user.id }}">@{{ msg.user.username }}</a>
           <span class="text-muted">{{ msg.timestamp.strftime('%d %B %Y') }}</span>
-          <form action="/unlike/{{ msg.id }}" method="POST">
+          <form action="/like/{{ msg.id }}" method="POST">
             {{ g.csrf_form.hidden_tag() }}
             <input type="hidden" name="next_location" value="{{ request.url }}" id="">
             <button type="submit"><i class="bi bi-star-fill messages-like"></i></button>

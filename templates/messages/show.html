@@ -49,19 +49,13 @@
           <p class="single-message">{{ message.text }}</p>
           <span class="text-muted">
             {% if message.user.id != g.user.id %}
-              {% if not message in g.user.likes %}
-              <form action="/like/{{ message.id }}" method="POST">
-                {{ g.csrf_form.hidden_tag() }}
-                <input type="hidden" name="next_location" value="{{ request.url }}" id="">
-                <button type="submit"><i class="bi bi-star messages-like"></i></button>
-              </form>
-              {% else %}
-              <form action="/unlike/{{ message.id }}" method="POST">
-                {{ g.csrf_form.hidden_tag() }}
-                <input type="hidden" name="next_location" value="{{ request.url }}" id="">
-                <button type="submit"><i class="bi bi-star-fill messages-like"></i></button>
-              </form>
-              {% endif %}
+            <form action="/like/{{ message.id }}" method="POST">
+              {{ g.csrf_form.hidden_tag() }}
+              <input type="hidden" name="next_location" value="{{ request.url }}" id="">
+              <button type="submit"><i class=
+                '{{ "bi bi-star-fill messages-like" if message in g.user.liked_messages else "bi bi-star messages-like" }}'></i></button>
+            </form>
+
             {% endif %}
               {{ message.timestamp.strftime('%d %B %Y') }}
             </span>

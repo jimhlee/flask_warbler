@@ -90,8 +90,9 @@ class User(db.Model):
     )
 
     messages = db.relationship('Message', backref="user")
+
 # TODO: names the properties "liked_messages"
-    likes = db.relationship(
+    liked_messages = db.relationship(
         'Message', secondary='likes', backref='users'
     )
 

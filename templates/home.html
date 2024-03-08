@@ -44,31 +44,25 @@
 
   <div class="col-lg-6 col-md-8 col-sm-12">
     <ul class="list-group" id="messages">
-      {% for msg in messages %}
+      {% for message in messages %}
       <li class="list-group-item">
-        <a href="/messages/{{ msg.id }}" class="message-link">
-          <a href="/users/{{ msg.user.id }}">
-            <img src="{{ msg.user.image_url }}" alt="" class="timeline-image">
+        <a href="/messages/{{ message.id }}" class="message-link">
+          <a href="/users/{{ message.user.id }}">
+            <img src="{{ message.user.image_url }}" alt="" class="timeline-image">
           </a>
           <div class="message-area">
-            <a href="/users/{{ msg.user.id }}">@{{ msg.user.username }}</a>
-            <span class="text-muted">{{ msg.timestamp.strftime('%d %B %Y') }}</span>
-            {% if msg.user.id != g.user.id %}
-              {% if not msg in g.user.likes %}
-              <form action="/like/{{ msg.id }}" method="POST">
+            <a href="/users/{{ message.user.id }}">@{{ message.user.username }}</a>
+            <span class="text-muted">{{ message.timestamp.strftime('%d %B %Y') }}</span>
+              {% if message.user.id != g.user.id %}
+              <form action="/like/{{ message.id }}" method="POST">
                 {{ g.csrf_form.hidden_tag() }}
                 <input type="hidden" name="next_location" value="{{ request.url }}" id="">
-                <button type="submit"><i class="bi bi-star messages-like"></i></button>
+                <button type="submit"><i class=
+                  '{{ "bi bi-star-fill messages-like" if message in g.user.liked_messages else "bi bi-star messages-like" }}'></i></button>
               </form>
-              {% else %}
-              <form action="/unlike/{{ msg.id }}" method="POST">
-                {{ g.csrf_form.hidden_tag() }}
-                <input type="hidden" name="next_location" value="{{ request.url }}" id="">
-                <button type="submit"><i class="bi bi-star-fill messages-like"></i></button>
-              </form>
+
               {% endif %}
-            {% endif %}
-            <p>{{ msg.text }}</p>
+            <p>{{ message.text }}</p>
           </div>
       </li>
       {% endfor %}

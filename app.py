@@ -384,45 +384,48 @@ def add_header(response):
 
 ##############################################################################
 # Likes
-#TODO: like and unlike one route
 
 @app.post('/like/<int:message_id>')
-def like_post(message_id):
+def change_like_status(message_id):
     """Likes message"""
 
     if not g.user or not g.csrf_form.validate_on_submit():
         flash("Access unauthorized.", "danger")
         return redirect("/")
+    liked_message = Message.query.get_or_404(message_id)
 
+    if liked_message in g.user.liked_messages:
+        # like = Like.query.get_or_404((g.user.id, message_id))
+        # db.session.delete(like)
+        g.user.liked_messages.remove(liked_message)
 
-    like = Like(user_id = g.user.id, message_id = message_id)
-    db.session.add(like)
+    else:
+        g.user.liked_messages.append(liked_message)
+
     db.session.commit()
     next_location = request.form['next_location']
 
-
-
     return redirect(next_location)
 
-
-
-
-@app.post('/unlike/<int:message_id>')
-def unlike_post(message_id):
-    """Unlikes message"""
-    if not g.user or not g.csrf_form.validate_on_submit():
-        flash("Access unauthorized.", "danger")
-        return redirect("/")
-
-    like = Like.query.get_or_404((g.user.id, message_id))
-    db.session.delete(like)
-    next_location = request.form['next_location']
-    db.session.commit()
-
-    return redirect(next_location)
 
 @app.get('/users/<int:user_id>/liked_messages')
-def show_likes_messages(user_id):
+def show_liked_messages(user_id):
     """Shows liked messages"""
     user = User.query.get_or_404(user_id)
     return render_template('users/liked-messages.html', user = user)
+
+
+
+
+# @app.post('/unlike/<int:message_id>')
+# def unlike_post(message_id):
+#     """Unlikes message"""
+#     if not g.user or not g.csrf_form.validate_on_submit():
+#         flash("Access unauthorized.", "danger")
+#         return redirect("/")
+
+#     like = Like.query.get_or_404((g.user.id, message_id))
+#     next_location = request.form['next_location']
+#     db.session.commit()
+
+#     return redirect(next_location)
