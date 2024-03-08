@@ -234,7 +234,7 @@ def stop_following(follow_id):
 def profile():
     """Update profile for current user."""
     form = UserUpdateForm(obj=g.user)
-    #TODO:Put if not g.user on the very top of function
+
     if not g.user:
         flash("Access unauthorized.", "danger")
         return redirect("/")
@@ -261,9 +261,6 @@ def profile():
             except IntegrityError:
                 flash('Username already taken')
                 return redirect(f'/users/{user.id}')
-
-
-
 
     return render_template("/users/edit.html", form=form)
     # IMPLEMENT THIS
@@ -387,17 +384,22 @@ def add_header(response):
 
 ##############################################################################
 # Likes
+#TODO: like and unlike one route
 
 @app.post('/like/<int:message_id>')
 def like_post(message_id):
+    """Likes message"""
+
+    if not g.user or not g.csrf_form.validate_on_submit():
+        flash("Access unauthorized.", "danger")
+        return redirect("/")
+
+
     like = Like(user_id = g.user.id, message_id = message_id)
     db.session.add(like)
+    db.session.commit()
     next_location = request.form['next_location']
 
-    try:
-        db.session.commit()
-    except IntegrityError:
-        return redirect('/')
 
 
     return redirect(next_location)
@@ -407,18 +409,20 @@ def like_post(message_id):
 
 @app.post('/unlike/<int:message_id>')
 def unlike_post(message_id):
+    """Unlikes message"""
+    if not g.user or not g.csrf_form.validate_on_submit():
+        flash("Access unauthorized.", "danger")
+        return redirect("/")
+
     like = Like.query.get_or_404((g.user.id, message_id))
     db.session.delete(like)
-    # g.user.likes.remove(like)
     next_location = request.form['next_location']
-
-    # g.user.likes.remove(like)
-    # hidden input with value of request.url in html form
-    # give it a name attr,
-    try:
-        db.session.commit()
-
-    except IntegrityError:
-        return redirect('/')
+    db.session.commit()
 
     return redirect(next_location)
+
+@app.get('/users/<int:user_id>/liked_messages')
+def show_likes_messages(user_id):
+    """Shows liked messages"""
+    user = User.query.get_or_404(user_id)
+    return render_template('users/liked-messages.html', user = user)

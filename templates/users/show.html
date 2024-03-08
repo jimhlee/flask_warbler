@@ -9,31 +9,30 @@
       <a href="/messages/{{ message.id }}" class="message-link"></a>
 
       <a href="/users/{{ user.id }}">
-        <img src="{{ user.image_url }}"
-             alt="user image"
-             class="timeline-image">
+        <img src="{{ user.image_url }}" alt="user image" class="timeline-image">
       </a>
 
       <div class="message-area">
         <a href="/users/{{ user.id }}">@{{ user.username }}</a>
         <span class="text-muted">
-              {{ message.timestamp.strftime('%d %B %Y') }}
-            </span>
-            {% if message.user.id != g.user.id %}
-              {% if not message in g.user.likes %}
-              <form action="/like/{{ message.id }}" method="POST">
-                {{ g.csrf_form.hidden_tag() }}
-                <input type="hidden" name="next_location" value="{{ request.url }}" id="">
-                <button type="submit"><i class="bi bi-star messages-like"></i></button>
-              </form>
-              {% else %}
-              <form action="/unlike/{{ message.id }}" method="POST">
-                {{ g.csrf_form.hidden_tag() }}
-                <input type="hidden" name="next_location" value="{{ request.url }}" id="">
-                <button type="submit"><i class="bi bi-star-fill messages-like"></i></button>
-              </form>
-              {% endif %}
-            {% endif %}
+          {{ message.timestamp.strftime('%d %B %Y') }}
+        </span>
+        {% if message.user.id != g.user.id %}
+        {% if not message in g.user.likes %}
+        <form action="/like/{{ message.id }}" method="POST">
+          {{ g.csrf_form.hidden_tag() }}
+          <input type="hidden" name="next_location" value="{{ request.url }}" id="">
+          ///{{ternary that shows bi-star-fill or bi-star}}
+          <button type="submit"><i class="bi bi-star messages-like"></i></button>
+        </form>
+        {% else %}
+        <form action="/unlike/{{ message.id }}" method="POST">
+          {{ g.csrf_form.hidden_tag() }}
+          <input type="hidden" name="next_location" value="{{ request.url }}" id="">
+          <button type="submit"><i class="bi bi-star-fill messages-like"></i></button>
+        </form>
+        {% endif %}
+        {% endif %}
         <p>{{ message.text }}</p>
       </div>
     </li>
