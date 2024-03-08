@@ -68,3 +68,24 @@ class MessageAddViewTestCase(MessageBaseViewTestCase):
             self.assertEqual(resp.status_code, 302)
 
             Message.query.filter_by(text="Hello").one()
+
+    def test_delete_message(self):
+        with app.test_client() as c:
+            with c.session_transaction() as sess:
+                sess[CURR_USER_KEY] = self.u1_id
+
+            resp = c.post(f"/messages/{self.m1_id}/delete")
+            u1 = User.query.get(self.u1_id)
+
+            self.assertEqual(resp.status_code, 302)
+            self.assertEqual(len(u1.messages), 0)
+
+
+    def test_show_nonexistent_message(self):
+        with app.test_client() as c:
+            with c.session_transaction() as sess:
+                sess[CURR_USER_KEY] = self.u1_id
+            resp = c.get("/messages/1000")
+
+            self.assertEqual(resp.status_code, 404)
+
